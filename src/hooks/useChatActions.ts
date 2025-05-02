@@ -5,8 +5,8 @@ import { usePlaygroundStore } from '../store'
 
 import {
   ComboboxAgent,
-  type PlaygroundChatMessage,
-  ComboboxTeam
+  Team,
+  type PlaygroundChatMessage
 } from '@/types/playground'
 import {
   getPlaygroundAgentsAPI,
@@ -86,7 +86,7 @@ const useChatActions = () => {
     try {
       const status = await getStatus()
       let agents: ComboboxAgent[] = []
-      let teams: ComboboxTeam[] = []
+      let teams: Team[] = []
 
       if (status === 200) {
         setIsEndpointActive(true)

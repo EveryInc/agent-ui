@@ -43,6 +43,8 @@ export function TeamSelector() {
     }
   }
 
+  console.log(teams)
+
   return (
     <Select
       value={teamId || ''}
@@ -55,13 +57,13 @@ export function TeamSelector() {
         {teams.map((team, index) => (
           <SelectItem
             className="cursor-pointer"
-            key={`${team.value}-${index}`}
-            value={team.value}
+            key={`${team.team_id}-${index}`}
+            value={team.team_id}
           >
             <div className="flex items-center gap-3 text-xs font-medium uppercase">
               {/* TODO: Add a team icon if available */}
               <Icon type={'agent'} size="xs" /> {/* Using agent icon for now */}
-              {team.label}
+              {team.name}
             </div>
           </SelectItem>
         ))}

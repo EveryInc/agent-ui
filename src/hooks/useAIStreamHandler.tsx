@@ -29,8 +29,6 @@ const useAIChatStreamHandler = () => {
   const setSessionsData = usePlaygroundStore((state) => state.setSessionsData)
   const hasStorage = usePlaygroundStore((state) => state.hasStorage)
   const { streamResponse } = useAIResponseStream()
-  const [, setAgentId] = useQueryState('agent')
-  const [, setTeamId] = useQueryState('team')
 
   const updateMessagesWithErrorState = useCallback(() => {
     setMessages((prevMessages) => {
@@ -94,7 +92,6 @@ const useAIChatStreamHandler = () => {
           console.warn(
             'Both agentId and teamId are set. Prioritizing teamId and clearing agentId.'
           )
-          setAgentId(null)
           currentAgentId = null
         }
 
@@ -317,8 +314,6 @@ const useAIChatStreamHandler = () => {
       streamResponse,
       agentId,
       teamId,
-      setAgentId,
-      setTeamId,
       setStreamingErrorMessage,
       setIsStreaming,
       focusChatInput,

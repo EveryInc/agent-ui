@@ -239,9 +239,3 @@ export interface Team {
   // Add other fields from the example as needed
   storage?: { name: string } | null
 }
-
-// Define ComboboxTeam type for the selector
-export interface ComboboxTeam {
-  value: string // Will hold team_id
-  label: string // Will hold name
-}
