@@ -1,13 +1,5 @@
 import { Document } from '@/store' // Import Document type from store
 
-// Type for the raw document structure from the API
-interface RawApiDocument {
-  id?: string // Assuming API might now return an ID?
-  name: string // Expect name from API
-  content: string
-  metadata?: Record<string, unknown>
-}
-
 /**
  * Fetches documents from the backend API.
  * @param endpoint - The base URL of the API endpoint.
