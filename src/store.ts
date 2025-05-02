@@ -51,6 +51,7 @@ interface PlaygroundStore {
   agents: Agent[]
   teams: Team[]
   setAgents: (agents: Agent[]) => void
+  setTeams: (teams: Team[]) => void
   selectedModel: string
   setSelectedModel: (model: string) => void
   sessionsData: SessionEntry[] | null
@@ -96,6 +97,7 @@ export const usePlaygroundStore = create<PlaygroundStore>()(
       agents: [],
       teams: [],
       setAgents: (agents) => set({ agents }),
+      setTeams: (teams) => set({ teams }),
       selectedModel: '',
       setSelectedModel: (selectedModel) => set(() => ({ selectedModel })),
       sessionsData: null,
