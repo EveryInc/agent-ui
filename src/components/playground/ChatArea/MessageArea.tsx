@@ -8,6 +8,8 @@ import { StickToBottom } from 'use-stick-to-bottom'
 const MessageArea = () => {
   const { messages } = usePlaygroundStore()
 
+  console.log('messages', messages)
+
   return (
     <StickToBottom
       className="relative mb-4 flex max-h-[calc(100vh-64px)] min-h-0 flex-grow flex-col"
