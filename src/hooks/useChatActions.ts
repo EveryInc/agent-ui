@@ -3,10 +3,15 @@ import { toast } from 'sonner'
 
 import { usePlaygroundStore } from '../store'
 
-import { ComboboxAgent, type PlaygroundChatMessage } from '@/types/playground'
+import {
+  ComboboxAgent,
+  type PlaygroundChatMessage,
+  ComboboxTeam
+} from '@/types/playground'
 import {
   getPlaygroundAgentsAPI,
-  getPlaygroundStatusAPI
+  getPlaygroundStatusAPI,
+  getPlaygroundTeamsAPI
 } from '@/api/playground'
 import { useQueryState } from 'nuqs'
 
@@ -22,8 +27,10 @@ const useChatActions = () => {
     (state) => state.setIsEndpointLoading
   )
   const setAgents = usePlaygroundStore((state) => state.setAgents)
+  const setTeams = usePlaygroundStore((state) => state.setTeams)
   const setSelectedModel = usePlaygroundStore((state) => state.setSelectedModel)
   const [agentId, setAgentId] = useQueryState('agent')
+  const [teamId] = useQueryState('team')
 
   const getStatus = useCallback(async () => {
     try {
@@ -40,6 +47,16 @@ const useChatActions = () => {
       return agents
     } catch {
       toast.error('Error fetching agents')
+      return []
+    }
+  }, [selectedEndpoint])
+
+  const getTeams = useCallback(async () => {
+    try {
+      const teams = await getPlaygroundTeamsAPI(selectedEndpoint)
+      return teams
+    } catch {
+      toast.error('Error fetching teams')
       return []
     }
   }, [selectedEndpoint])
@@ -69,10 +86,21 @@ const useChatActions = () => {
     try {
       const status = await getStatus()
       let agents: ComboboxAgent[] = []
+      let teams: ComboboxTeam[] = []
+
       if (status === 200) {
         setIsEndpointActive(true)
-        agents = await getAgents()
-        if (agents.length > 0 && !agentId) {
+
+        const results = await Promise.allSettled([getAgents(), getTeams()])
+
+        if (results[0].status === 'fulfilled') {
+          agents = results[0].value
+        }
+        if (results[1].status === 'fulfilled') {
+          teams = results[1].value
+        }
+
+        if (agents.length > 0 && !agentId && !teamId) {
           const firstAgent = agents[0]
           setAgentId(firstAgent.value)
           setSelectedModel(firstAgent.model.provider || '')
@@ -80,28 +108,38 @@ const useChatActions = () => {
       } else {
         setIsEndpointActive(false)
       }
+
       setAgents(agents)
-      return agents
-    } catch {
-      setIsEndpointLoading(false)
+      setTeams(teams)
+
+      return { agents, teams }
+    } catch (error) {
+      console.error('Error initializing playground:', error)
+      setIsEndpointActive(false)
+      setAgents([])
+      setTeams([])
     } finally {
       setIsEndpointLoading(false)
     }
   }, [
     getStatus,
     getAgents,
+    getTeams,
     setIsEndpointActive,
     setIsEndpointLoading,
     setAgents,
+    setTeams,
     setAgentId,
     setSelectedModel,
-    agentId
+    agentId,
+    teamId
   ])
 
   return {
     clearChat,
     addMessage,
     getAgents,
+    getTeams,
     focusChatInput,
     initializePlayground
   }

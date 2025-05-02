@@ -228,3 +228,20 @@ export interface ChatEntry {
     created_at: number
   }
 }
+
+// Define Team type based on the example response
+export interface Team {
+  team_id: string
+  name: string
+  description?: string
+  model?: Model // Reusing existing Model type
+  members?: Agent[] // Reusing existing Agent type
+  // Add other fields from the example as needed
+  storage?: { name: string } | null
+}
+
+// Define ComboboxTeam type for the selector
+export interface ComboboxTeam {
+  value: string // Will hold team_id
+  label: string // Will hold name
+}

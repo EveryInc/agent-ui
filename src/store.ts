@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
 import {
+  Team,
   type PlaygroundChatMessage,
   type SessionEntry
 } from '@/types/playground'
@@ -48,6 +49,7 @@ interface PlaygroundStore {
   selectedEndpoint: string
   setSelectedEndpoint: (selectedEndpoint: string) => void
   agents: Agent[]
+  teams: Team[]
   setAgents: (agents: Agent[]) => void
   selectedModel: string
   setSelectedModel: (model: string) => void
@@ -92,6 +94,7 @@ export const usePlaygroundStore = create<PlaygroundStore>()(
       setSelectedEndpoint: (selectedEndpoint) =>
         set(() => ({ selectedEndpoint })),
       agents: [],
+      teams: [],
       setAgents: (agents) => set({ agents }),
       selectedModel: '',
       setSelectedModel: (selectedModel) => set(() => ({ selectedModel })),

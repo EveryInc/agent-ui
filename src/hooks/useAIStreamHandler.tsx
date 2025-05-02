@@ -19,6 +19,7 @@ const useAIChatStreamHandler = () => {
   const setMessages = usePlaygroundStore((state) => state.setMessages)
   const { addMessage, focusChatInput } = useChatActions()
   const [agentId] = useQueryState('agent')
+  const [teamId] = useQueryState('team')
   const [sessionId, setSessionId] = useQueryState('session')
   const selectedEndpoint = usePlaygroundStore((state) => state.selectedEndpoint)
   const setStreamingErrorMessage = usePlaygroundStore(
@@ -28,6 +29,8 @@ const useAIChatStreamHandler = () => {
   const setSessionsData = usePlaygroundStore((state) => state.setSessionsData)
   const hasStorage = usePlaygroundStore((state) => state.hasStorage)
   const { streamResponse } = useAIResponseStream()
+  const [, setAgentId] = useQueryState('agent')
+  const [, setTeamId] = useQueryState('team')
 
   const updateMessagesWithErrorState = useCallback(() => {
     setMessages((prevMessages) => {
@@ -40,6 +43,7 @@ const useAIChatStreamHandler = () => {
     })
   }, [setMessages])
 
+  console.log(agentId, teamId)
   const handleStreamResponse = useCallback(
     async (input: string | FormData) => {
       setIsStreaming(true)
@@ -83,11 +87,42 @@ const useAIChatStreamHandler = () => {
       try {
         const endpointUrl = constructEndpointUrl(selectedEndpoint)
 
-        if (!agentId) return
-        const playgroundRunUrl = APIRoutes.AgentRun(endpointUrl).replace(
-          '{agent_id}',
-          agentId
-        )
+        let currentAgentId = agentId
+        const currentTeamId = teamId
+
+        if (currentAgentId && currentTeamId) {
+          console.warn(
+            'Both agentId and teamId are set. Prioritizing teamId and clearing agentId.'
+          )
+          setAgentId(null)
+          currentAgentId = null
+        }
+
+        if (!currentAgentId && !currentTeamId) {
+          console.error('No agent or team selected')
+          setIsStreaming(false)
+          return
+        }
+
+        let playgroundRunUrl: string
+
+        if (currentTeamId) {
+          playgroundRunUrl = APIRoutes.TeamRun(endpointUrl).replace(
+            '{team_id}',
+            currentTeamId
+          )
+        } else if (currentAgentId) {
+          playgroundRunUrl = APIRoutes.AgentRun(endpointUrl).replace(
+            '{agent_id}',
+            currentAgentId
+          )
+        } else {
+          console.error(
+            'Inconsistent state: No agent or team ID found despite initial check.'
+          )
+          setIsStreaming(false)
+          return
+        }
 
         formData.append('stream', 'true')
         formData.append('session_id', sessionId ?? '')
@@ -281,6 +316,9 @@ const useAIChatStreamHandler = () => {
       selectedEndpoint,
       streamResponse,
       agentId,
+      teamId,
+      setAgentId,
+      setTeamId,
       setStreamingErrorMessage,
       setIsStreaming,
       focusChatInput,

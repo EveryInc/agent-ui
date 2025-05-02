@@ -23,6 +23,7 @@ export function AgentSelector() {
     history: 'push'
   })
   const [, setSessionId] = useQueryState('session')
+  const [, setTeamId] = useQueryState('team')
 
   // Set the model when the component mounts if an agent is already selected
   useEffect(() => {
@@ -42,11 +43,12 @@ export function AgentSelector() {
   }, [agentId, agents, setSelectedModel])
 
   const handleOnValueChange = (value: string) => {
-    const newAgent = value === agentId ? '' : value
+    const newAgent = value === agentId ? null : value
     const selectedAgent = agents.find((agent) => agent.value === newAgent)
     setSelectedModel(selectedAgent?.model.provider || '')
     setHasStorage(!!selectedAgent?.storage)
     setAgentId(newAgent)
+    setTeamId(null)
     setMessages([])
     setSessionId(null)
     if (selectedAgent?.model.provider) {
@@ -59,10 +61,10 @@ export function AgentSelector() {
       value={agentId || ''}
       onValueChange={(value) => handleOnValueChange(value)}
     >
-      <SelectTrigger className="h-9 w-full rounded-xl border border-primary/15 bg-primaryAccent text-xs font-medium uppercase">
+      <SelectTrigger className="border-primary/15 bg-primaryAccent h-9 w-full rounded-xl border text-xs font-medium uppercase">
         <SelectValue placeholder="Select Agent" />
       </SelectTrigger>
-      <SelectContent className="border-none bg-primaryAccent font-dmmono shadow-lg">
+      <SelectContent className="bg-primaryAccent font-dmmono border-none shadow-lg">
         {agents.map((agent, index) => (
           <SelectItem
             className="cursor-pointer"

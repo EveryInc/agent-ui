@@ -2,7 +2,13 @@ import { toast } from 'sonner'
 
 import { APIRoutes } from './routes'
 
-import { Agent, ComboboxAgent, SessionEntry } from '@/types/playground'
+import {
+  Agent,
+  ComboboxAgent,
+  SessionEntry,
+  Team,
+  ComboboxTeam
+} from '@/types/playground'
 
 export const getPlaygroundAgentsAPI = async (
   endpoint: string
@@ -25,6 +31,31 @@ export const getPlaygroundAgentsAPI = async (
     return agents
   } catch {
     toast.error('Error fetching playground agents')
+    return []
+  }
+}
+
+export const getPlaygroundTeamsAPI = async (
+  endpoint: string
+): Promise<ComboboxTeam[]> => {
+  const url = APIRoutes.GetPlaygroundTeams(endpoint)
+  try {
+    const response = await fetch(url, { method: 'GET' })
+    if (!response.ok) {
+      toast.error(`Failed to fetch playground teams: ${response.statusText}`)
+      return []
+    }
+    const data = await response.json()
+    // Transform the API response into the expected shape.
+    // Adjust mapping based on the actual /teams response structure
+    const teams: ComboboxTeam[] = data.map((item: Team) => ({
+      value: item.team_id || '', // Assuming team_id field
+      label: item.name || '' // Assuming name field
+      // Add other relevant fields if needed
+    }))
+    return teams
+  } catch {
+    toast.error('Error fetching playground teams')
     return []
   }
 }
