@@ -22,6 +22,7 @@ const SessionItem = ({
   onSessionClick
 }: SessionItemProps) => {
   const [agentId] = useQueryState('agent')
+  const [teamId] = useQueryState('team')
   const { getSession } = useSessionLoader()
   const [, setSessionId] = useQueryState('session')
   const { selectedEndpoint, sessionsData, setSessionsData } =
@@ -30,9 +31,9 @@ const SessionItem = ({
   const { clearChat } = useChatActions()
 
   const handleGetSession = async () => {
-    if (agentId) {
+    if (agentId || teamId) {
       onSessionClick()
-      await getSession(session_id, agentId)
+      await getSession(session_id, agentId, teamId)
       setSessionId(session_id)
     }
   }
@@ -67,7 +68,7 @@ const SessionItem = ({
         className={cn(
           'group flex h-11 w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 transition-colors duration-200',
           isSelected
-            ? 'cursor-default bg-primary/10'
+            ? 'bg-primary/10 cursor-default'
             : 'bg-background-secondary hover:bg-background-secondary/80'
         )}
         onClick={handleGetSession}

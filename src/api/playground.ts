@@ -77,6 +77,29 @@ export const getAllPlaygroundSessionsAPI = async (
   }
 }
 
+export const getAllPlaygroundTeamSessionsAPI = async (
+  base: string,
+  teamId: string
+): Promise<SessionEntry[]> => {
+  try {
+    const response = await fetch(
+      APIRoutes.GetPlaygroundTeamSessions(base, teamId),
+      {
+        method: 'GET'
+      }
+    )
+    if (!response.ok) {
+      if (response.status === 404) {
+        return []
+      }
+      throw new Error(`Failed to fetch team sessions: ${response.statusText}`)
+    }
+    return response.json()
+  } catch {
+    return []
+  }
+}
+
 export const getPlaygroundSessionAPI = async (
   base: string,
   agentId: string,
@@ -88,6 +111,23 @@ export const getPlaygroundSessionAPI = async (
       method: 'GET'
     }
   )
+  return response.json()
+}
+
+export const getPlaygroundTeamSessionAPI = async (
+  base: string,
+  teamId: string,
+  sessionId: string
+) => {
+  const response = await fetch(
+    APIRoutes.GetPlaygroundTeamSession(base, teamId, sessionId),
+    {
+      method: 'GET'
+    }
+  )
+  if (!response.ok) {
+    throw new Error(`Failed to fetch team session: ${response.statusText}`)
+  }
   return response.json()
 }
 

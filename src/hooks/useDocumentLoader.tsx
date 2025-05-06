@@ -24,7 +24,6 @@ export const useDocumentLoader = () => {
     setDocumentsData(null) // Clear previous data
     try {
       const documents = await listDocumentsAPI(selectedEndpoint)
-      console.log('[useDocumentLoader] Fetched documents:', documents)
       setDocumentsData(documents)
     } catch (error) {
       console.error('Error loading documents:', error)

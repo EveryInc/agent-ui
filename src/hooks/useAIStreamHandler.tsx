@@ -41,7 +41,6 @@ const useAIChatStreamHandler = () => {
     })
   }, [setMessages])
 
-  console.log(agentId, teamId)
   const handleStreamResponse = useCallback(
     async (input: string | FormData) => {
       setIsStreaming(true)

@@ -52,6 +52,10 @@ const Sessions = () => {
     parse: (value) => value || undefined,
     history: 'push'
   })
+  const [teamId] = useQueryState('team', {
+    parse: (value) => value || undefined,
+    history: 'push'
+  })
   const [sessionId] = useQueryState('session')
   const {
     selectedEndpoint,
@@ -93,24 +97,24 @@ const Sessions = () => {
 
   // Load a session on render if a session id exists in url
   useEffect(() => {
-    if (sessionId && agentId && selectedEndpoint && hydrated) {
-      getSession(sessionId, agentId)
+    if (sessionId && (agentId || teamId) && selectedEndpoint && hydrated) {
+      getSession(sessionId, agentId, teamId)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated])
+  }, [hydrated, teamId, agentId, sessionId, selectedEndpoint, getSession])
 
   useEffect(() => {
-    if (!selectedEndpoint || !agentId || !hasStorage) {
+    if (!selectedEndpoint || (!agentId && !teamId) || !hasStorage) {
       setSessionsData(() => null)
       return
     }
     if (!isEndpointLoading) {
       setSessionsData(() => null)
-      getSessions(agentId)
+      getSessions(agentId, teamId)
     }
   }, [
     selectedEndpoint,
     agentId,
+    teamId,
     getSessions,
     isEndpointLoading,
     hasStorage,

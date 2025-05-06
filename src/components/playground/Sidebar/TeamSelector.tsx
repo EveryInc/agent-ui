@@ -43,8 +43,6 @@ export function TeamSelector() {
     }
   }
 
-  console.log(teams)
-
   return (
     <Select
       value={teamId || ''}

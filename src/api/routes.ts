@@ -11,12 +11,20 @@ export const APIRoutes = {
     `${PlaygroundApiUrl}/v1/playground/status`,
   GetPlaygroundSessions: (PlaygroundApiUrl: string, agentId: string) =>
     `${PlaygroundApiUrl}/v1/playground/agents/${agentId}/sessions`,
+  GetPlaygroundTeamSessions: (PlaygroundApiUrl: string, teamId: string) =>
+    `${PlaygroundApiUrl}/v1/playground/teams/${teamId}/sessions`,
   GetPlaygroundSession: (
     PlaygroundApiUrl: string,
     agentId: string,
     sessionId: string
   ) =>
     `${PlaygroundApiUrl}/v1/playground/agents/${agentId}/sessions/${sessionId}`,
+  GetPlaygroundTeamSession: (
+    PlaygroundApiUrl: string,
+    teamId: string,
+    sessionId: string
+  ) =>
+    `${PlaygroundApiUrl}/v1/playground/teams/${teamId}/sessions/${sessionId}`,
 
   DeletePlaygroundSession: (
     PlaygroundApiUrl: string,
