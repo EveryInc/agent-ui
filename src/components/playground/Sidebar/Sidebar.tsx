@@ -202,6 +202,7 @@ const Endpoint = () => {
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
   const { clearChat, focusChatInput, initializePlayground } = useChatActions()
   const {
     messages,
@@ -220,20 +221,56 @@ const Sidebar = () => {
     if (hydrated) initializePlayground()
   }, [selectedEndpoint, initializePlayground, hydrated])
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (isMobileOpen && !target.closest('.sidebar-container')) {
+        setIsMobileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMobileOpen]);
+
   const handleNewChat = () => {
     clearChat()
     focusChatInput()
   }
 
   return (
-    <motion.aside
-      className="font-dmmono relative flex h-screen shrink-0 grow-0 flex-col overflow-hidden px-2 py-3"
-      initial={{ width: '16rem' }}
-      animate={{ width: isCollapsed ? '2.5rem' : '16rem' }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-    >
+    <>
+      {/* Mobile Hamburger Menu - Only visible on small screens */}
+      {!isMobileOpen && (
+        <button 
+          onClick={() => setIsMobileOpen(!isMobileOpen)}
+          className="md:hidden fixed top-3 left-3 z-50 p-2 bg-background/80 rounded-md"
+          aria-label="Toggle mobile menu"
+        >
+          <Icon type="sheet" size="xs" />
+        </button>
+      )}
+
+      {/* Mobile overlay backdrop when sidebar is open */}
+      {isMobileOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/50 z-30" 
+          onClick={() => setIsMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <motion.aside
+        className="sidebar-container font-dmmono fixed md:relative flex h-screen shrink-0 grow-0 flex-col overflow-hidden px-2 py-3 z-40 bg-background/95 md:bg-transparent shadow-lg md:shadow-none"
+        initial={{ width: '16rem', x: '-100%' }}
+        animate={{ 
+          width: isCollapsed ? '2.5rem' : '16rem',
+          x: isMobileOpen ? '0%' : (typeof window !== 'undefined' && window.innerWidth < 768 ? '-100%' : '0%')
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      >
       <motion.button
-        onClick={() => setIsCollapsed(!isCollapsed)}
+        onClick={() => {setIsCollapsed(!isCollapsed); setIsMobileOpen(false)}}
         className="absolute right-2 top-2 z-10 p-1"
         aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         type="button"
@@ -321,6 +358,7 @@ const Sidebar = () => {
         )}
       </motion.div>
     </motion.aside>
+    </>
   )
 }
 

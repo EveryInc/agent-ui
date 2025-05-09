@@ -6,7 +6,7 @@ import { Suspense } from 'react'
 export default function Home() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <div className="flex h-screen bg-background/80">
+      <div className="bg-background/80 flex flex-col md:flex-row h-screen overflow-hidden">
         <Sidebar />
         <ChatArea />
       </div>
