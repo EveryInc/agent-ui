@@ -31,5 +31,8 @@ export const APIRoutes = {
     agentId: string,
     sessionId: string
   ) =>
-    `${PlaygroundApiUrl}/v1/playground/agents/${agentId}/sessions/${sessionId}`
+    `${PlaygroundApiUrl}/v1/playground/agents/${agentId}/sessions/${sessionId}`,
+
+  BranchSession: (PlaygroundApiUrl: string) =>
+    `${PlaygroundApiUrl}/sessions/branch`
 }

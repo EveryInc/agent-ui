@@ -143,6 +143,8 @@ export interface PlaygroundChatMessage {
   content: string
   streamingError?: boolean
   created_at: number
+  run_id?: string
+  session_id?: string
   tool_calls?: ToolCall[]
   extra_data?: {
     reasoning_steps?: ReasoningSteps[]
@@ -211,8 +213,10 @@ export interface ChatEntry {
     content: string
     created_at: number
   }
+  run_id?: string
   response: {
     content: string
+    run_id?: string
     tools?: ToolCall[]
     extra_data?: {
       reasoning_steps?: ReasoningSteps[]

@@ -105,7 +105,9 @@ const useSessionLoader = () => {
                 filteredMessages.push({
                   role: 'user',
                   content: run.message.content ?? '',
-                  created_at: run.message.created_at
+                  created_at: run.message.created_at,
+                  run_id: run.response?.run_id || String(run.message.created_at),
+                  session_id: sessionId
                 })
               }
 
@@ -142,7 +144,9 @@ const useSessionLoader = () => {
                   videos: run.response.videos,
                   audio: run.response.audio,
                   response_audio: run.response.response_audio,
-                  created_at: run.response.created_at
+                  created_at: run.response.created_at,
+                  run_id: run.response.run_id || String(run.response.created_at),
+                  session_id: sessionId
                 })
               }
               return filteredMessages

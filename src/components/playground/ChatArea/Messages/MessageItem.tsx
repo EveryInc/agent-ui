@@ -7,6 +7,7 @@ import Images from './Multimedia/Images'
 import Audios from './Multimedia/Audios'
 import { memo } from 'react'
 import AgentThinkingLoader from './AgentThinkingLoader'
+import CloneButton from './CloneButton'
 
 interface MessageProps {
   message: PlaygroundChatMessage
@@ -73,7 +74,12 @@ const AgentMessage = ({ message }: MessageProps) => {
       <div className="flex-shrink-0">
         <Icon type="agent" size="sm" />
       </div>
-      {messageContent}
+      <div className="flex-grow">{messageContent}</div>
+      {message.run_id && message.session_id && (
+        <div className="flex-shrink-0 self-start mt-1">
+          <CloneButton runId={message.run_id} sessionId={message.session_id} />
+        </div>
+      )}
     </div>
   )
 }
@@ -81,7 +87,7 @@ const AgentMessage = ({ message }: MessageProps) => {
 const UserMessage = memo(({ message }: MessageProps) => {
   return (
     <div className="flex items-start pt-4 text-start max-md:break-words">
-      <div className="flex flex-row gap-x-3">
+      <div className="flex flex-row gap-x-3 flex-grow">
         <p className="flex items-center gap-x-2 text-sm font-medium text-muted">
           <Icon type="user" size="sm" />
         </p>
@@ -89,6 +95,11 @@ const UserMessage = memo(({ message }: MessageProps) => {
           {message.content}
         </div>
       </div>
+      {message.run_id && message.session_id && (
+        <div className="flex-shrink-0 self-start mt-1">
+          <CloneButton runId={message.run_id} sessionId={message.session_id} />
+        </div>
+      )}
     </div>
   )
 })
