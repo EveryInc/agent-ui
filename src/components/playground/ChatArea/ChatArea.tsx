@@ -2,7 +2,12 @@
 
 import ChatInput from './ChatInput'
 import MessageArea from './MessageArea'
+import useWorkflowStateRefresh from '@/hooks/useWorkflowStateRefresh'
+
 const ChatArea = () => {
+  // Use the workflow state refresh hook to periodically update the workflow state
+  useWorkflowStateRefresh()
+  
   return (
     <main className="relative m-1.5 flex flex-grow flex-col rounded-xl bg-background w-full">
       {/* Mobile padding adjustment for when hamburger menu is visible */}

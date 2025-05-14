@@ -92,7 +92,7 @@ const UserMessage = memo(({ message }: MessageProps) => {
           <Icon type="user" size="sm" />
         </p>
         <div className="text-md rounded-lg py-1 font-geist text-secondary">
-          {message.content}
+          {message.content && <MarkdownRenderer>{message.content}</MarkdownRenderer>}
         </div>
       </div>
       {message.run_id && message.session_id && (

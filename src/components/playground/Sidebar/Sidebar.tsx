@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button'
 import { AgentSelector } from '@/components/playground/Sidebar/AgentSelector'
 import { TeamSelector } from '@/components/playground/Sidebar/TeamSelector'
+import { WorkflowSelector } from '@/components/playground/Sidebar/WorkflowSelector'
 import useChatActions from '@/hooks/useChatActions'
 import { usePlaygroundStore } from '@/store'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -10,6 +11,7 @@ import Icon from '@/components/ui/icon'
 import { getProviderIcon } from '@/lib/modelProvider'
 import Sessions from './Sessions'
 import Documents from './Documents'
+import SessionState from './SessionState'
 import { isValidUrl } from '@/lib/utils'
 import { toast } from 'sonner'
 import { useQueryState } from 'nuqs'
@@ -215,6 +217,7 @@ const Sidebar = () => {
   const [isMounted, setIsMounted] = useState(false)
   const [agentId] = useQueryState('agent')
   const [teamId] = useQueryState('team')
+  const [workflowId] = useQueryState('workflow')
 
   useEffect(() => {
     setIsMounted(true)
@@ -348,6 +351,28 @@ const Sidebar = () => {
                     </div>
                   ) : (
                     <TeamSelector />
+                  )}
+                </motion.div>
+                <motion.div
+                  className="flex w-full flex-col items-start gap-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, ease: 'easeInOut' }}
+                >
+                  <div className="text-primary text-xs font-medium uppercase">
+                    Workflow
+                  </div>
+                  {isEndpointLoading ? (
+                    <div className="flex w-full flex-col gap-2">
+                      {Array.from({ length: 1 }).map((_, index) => (
+                        <Skeleton
+                          key={index}
+                          className="h-9 w-full rounded-xl"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <WorkflowSelector />
                   )}
                 </motion.div>
                 <Sessions />

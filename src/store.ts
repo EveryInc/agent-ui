@@ -4,7 +4,8 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import {
   Team,
   type PlaygroundChatMessage,
-  type SessionEntry
+  type SessionEntry,
+  type ComboboxWorkflow
 } from '@/types/playground'
 
 // Define Agent interface as it was
@@ -61,8 +62,10 @@ export interface PlaygroundStore {
   setSelectedEndpoint: (selectedEndpoint: string) => void
   agents: Agent[]
   teams: Team[]
+  workflows: ComboboxWorkflow[]
   setAgents: (agents: Agent[]) => void
   setTeams: (teams: Team[]) => void
+  setWorkflows: (workflows: ComboboxWorkflow[]) => void
   selectedModel: string | null // Allow null based on previous attempts
   setSelectedModel: (model: string | null) => void // Allow null
   sessionsData: SessionEntry[] | null // Use SessionEntry type
@@ -80,6 +83,10 @@ export interface PlaygroundStore {
   setDocumentsData: (data: Document[] | null) => void
   isDocumentsLoading: boolean
   setIsDocumentsLoading: (isLoading: boolean) => void
+
+  // Add workflow session state
+  workflowSessionState: Record<string, unknown> | null
+  setWorkflowSessionState: (state: Record<string, unknown> | null) => void
 }
 
 export const usePlaygroundStore = create<PlaygroundStore>()(
@@ -116,8 +123,10 @@ export const usePlaygroundStore = create<PlaygroundStore>()(
         set(() => ({ selectedEndpoint })),
       agents: [], // Original was []
       teams: [], // Original was []
+      workflows: [], // Add workflows array
       setAgents: (agents) => set({ agents }), // Keep simple setter
       setTeams: (teams) => set({ teams }), // Keep simple setter
+      setWorkflows: (workflows) => set({ workflows }), // Add workflows setter
       selectedModel: null, // Allow null
       setSelectedModel: (selectedModel) => set(() => ({ selectedModel })),
       sessionsData: null,
@@ -137,7 +146,12 @@ export const usePlaygroundStore = create<PlaygroundStore>()(
       setDocumentsData: (data) => set({ documentsData: data }), // Simple setter
       isDocumentsLoading: false,
       setIsDocumentsLoading: (isLoading) =>
-        set({ isDocumentsLoading: isLoading }) // Simple setter consistent with others
+        set(() => ({ isDocumentsLoading: isLoading })),
+        
+      // Workflow session state
+      workflowSessionState: null,
+      setWorkflowSessionState: (state) =>
+        set(() => ({ workflowSessionState: state })), // Simple setter consistent with others
     }),
     {
       // Restore original persist options

@@ -24,22 +24,26 @@ export function TeamSelector() {
   })
   const [, setSessionId] = useQueryState('session')
   const [, setAgentId] = useQueryState('agent')
+  const [, setWorkflowId] = useQueryState('workflow')
 
   // TODO: Add logic if needed when team selection changes or on mount
 
   const handleOnValueChange = (value: string) => {
     const newTeamId = value === teamId ? null : value // Use null for clearing
-    setTeamId(newTeamId)
-    setAgentId(null)
-    setMessages([]) // Clear messages when team changes
-    setSessionId(null) // Clear session when team changes
-    // Add any other side effects of selecting a team
-    // For example, maybe clear the selected agent?
-    // setAgentId(null)?
-
-    // Focus input if a team is selected (optional, adjust as needed)
+    
     if (newTeamId) {
+      // If selecting a team, clear agent and workflow
+      setTeamId(newTeamId)
+      setAgentId(null)
+      setWorkflowId(null) // Clear workflow selection
+      setMessages([]) // Clear messages when team changes
+      setSessionId(null) // Clear session when team changes
       focusChatInput()
+    } else {
+      // Just clearing the team
+      setTeamId(null)
+      setMessages([])
+      setSessionId(null)
     }
   }
 

@@ -14,10 +14,11 @@ const ChatInput = () => {
   const { handleStreamResponse } = useAIChatStreamHandler()
   const [selectedAgent] = useQueryState('agent')
   const [selectedTeam] = useQueryState('team')
+  const [selectedWorkflow] = useQueryState('workflow')
   const [inputMessage, setInputMessage] = useState('')
   const isStreaming = usePlaygroundStore((state) => state.isStreaming)
 
-  const isSelectionActive = !!selectedAgent || !!selectedTeam
+  const isSelectionActive = !!selectedAgent || !!selectedTeam || !!selectedWorkflow
 
   const handleSubmit = async () => {
     if (!inputMessage.trim()) return

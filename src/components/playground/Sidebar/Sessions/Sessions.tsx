@@ -56,6 +56,10 @@ const Sessions = () => {
     parse: (value) => value || undefined,
     history: 'push'
   })
+  const [workflowId] = useQueryState('workflow', {
+    parse: (value) => value || undefined,
+    history: 'push'
+  })
   const [sessionId] = useQueryState('session')
   const {
     selectedEndpoint,
@@ -97,24 +101,25 @@ const Sessions = () => {
 
   // Load a session on render if a session id exists in url
   useEffect(() => {
-    if (sessionId && (agentId || teamId) && selectedEndpoint && hydrated) {
-      getSession(sessionId, agentId, teamId)
+    if (sessionId && (agentId || teamId || workflowId) && selectedEndpoint && hydrated) {
+      getSession(sessionId, agentId, teamId, workflowId);
     }
-  }, [hydrated, teamId, agentId, sessionId, selectedEndpoint, getSession])
+  }, [hydrated, teamId, agentId, workflowId, sessionId, selectedEndpoint, getSession])
 
   useEffect(() => {
-    if (!selectedEndpoint || (!agentId && !teamId) || !hasStorage) {
+    if (!selectedEndpoint || (!agentId && !teamId && !workflowId) || !hasStorage) {
       setSessionsData(() => null)
       return
     }
     if (!isEndpointLoading) {
       setSessionsData(() => null)
-      getSessions(agentId, teamId)
+      getSessions(agentId, teamId, workflowId)
     }
   }, [
     selectedEndpoint,
     agentId,
     teamId,
+    workflowId,
     getSessions,
     isEndpointLoading,
     hasStorage,

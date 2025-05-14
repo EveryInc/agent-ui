@@ -23,6 +23,7 @@ const SessionItem = ({
 }: SessionItemProps) => {
   const [agentId] = useQueryState('agent')
   const [teamId] = useQueryState('team')
+  const [workflowId] = useQueryState('workflow')
   const { getSession } = useSessionLoader()
   const [, setSessionId] = useQueryState('session')
   const { selectedEndpoint, sessionsData, setSessionsData } =
@@ -31,22 +32,38 @@ const SessionItem = ({
   const { clearChat } = useChatActions()
 
   const handleGetSession = async () => {
-    if (agentId || teamId) {
+    if (agentId || teamId || workflowId) {
       onSessionClick()
-      await getSession(session_id, agentId, teamId)
+      await getSession(session_id, agentId, teamId, workflowId)
       setSessionId(session_id)
     }
   }
 
   const handleDeleteSession = async () => {
-    if (agentId) {
+    if (agentId || teamId || workflowId) {
       try {
-        const response = await deletePlaygroundSessionAPI(
-          selectedEndpoint,
-          agentId,
-          session_id
-        )
-        if (response.status === 200 && sessionsData) {
+        let response;
+        
+        if (workflowId) {
+          response = await deletePlaygroundWorkflowSessionAPI(
+            selectedEndpoint,
+            workflowId,
+            session_id
+          );
+        } else if (teamId) {
+          // Assuming there's a team session delete API
+          toast.error('Team session deletion not implemented');
+          setIsDeleteModalOpen(false);
+          return;
+        } else if (agentId) {
+          response = await deletePlaygroundSessionAPI(
+            selectedEndpoint,
+            agentId,
+            session_id
+          );
+        }
+        
+        if (response && response.status === 200 && sessionsData) {
           setSessionsData(
             sessionsData.filter((session) => session.session_id !== session_id)
           )

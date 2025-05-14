@@ -6,12 +6,14 @@ import { usePlaygroundStore } from '../store'
 import {
   ComboboxAgent,
   Team,
-  type PlaygroundChatMessage
+  type PlaygroundChatMessage,
+  type ComboboxWorkflow
 } from '@/types/playground'
 import {
   getPlaygroundAgentsAPI,
   getPlaygroundStatusAPI,
-  getPlaygroundTeamsAPI
+  getPlaygroundTeamsAPI,
+  getPlaygroundWorkflowsAPI
 } from '@/api/playground'
 import { useQueryState } from 'nuqs'
 
@@ -28,9 +30,11 @@ const useChatActions = () => {
   )
   const setAgents = usePlaygroundStore((state) => state.setAgents)
   const setTeams = usePlaygroundStore((state) => state.setTeams)
+  const setWorkflows = usePlaygroundStore((state) => state.setWorkflows)
   const setSelectedModel = usePlaygroundStore((state) => state.setSelectedModel)
   const [agentId, setAgentId] = useQueryState('agent')
   const [teamId] = useQueryState('team')
+  const [workflowId] = useQueryState('workflow')
 
   const getStatus = useCallback(async () => {
     try {
@@ -61,6 +65,16 @@ const useChatActions = () => {
     }
   }, [selectedEndpoint])
 
+  const getWorkflows = useCallback(async () => {
+    try {
+      const workflows = await getPlaygroundWorkflowsAPI(selectedEndpoint)
+      return workflows
+    } catch {
+      toast.error('Error fetching workflows')
+      return []
+    }
+  }, [selectedEndpoint])
+
   const clearChat = useCallback(() => {
     setMessages([])
     setSessionId(null)
@@ -87,11 +101,12 @@ const useChatActions = () => {
       const status = await getStatus()
       let agents: ComboboxAgent[] = []
       let teams: Team[] = []
+      let workflows: ComboboxWorkflow[] = []
 
       if (status === 200) {
         setIsEndpointActive(true)
 
-        const results = await Promise.allSettled([getAgents(), getTeams()])
+        const results = await Promise.allSettled([getAgents(), getTeams(), getWorkflows()])
 
         if (results[0].status === 'fulfilled') {
           agents = results[0].value
@@ -99,8 +114,11 @@ const useChatActions = () => {
         if (results[1].status === 'fulfilled') {
           teams = results[1].value
         }
+        if (results[2].status === 'fulfilled') {
+          workflows = results[2].value
+        }
 
-        if (agents.length > 0 && !agentId && !teamId) {
+        if (agents.length > 0 && !agentId && !teamId && !workflowId) {
           const firstAgent = agents[0]
           setAgentId(firstAgent.value)
           setSelectedModel(firstAgent.model.provider || '')
@@ -111,8 +129,9 @@ const useChatActions = () => {
 
       setAgents(agents)
       setTeams(teams)
+      setWorkflows(workflows)
 
-      return { agents, teams }
+      return { agents, teams, workflows }
     } catch (error) {
       console.error('Error initializing playground:', error)
       setIsEndpointActive(false)
@@ -125,14 +144,17 @@ const useChatActions = () => {
     getStatus,
     getAgents,
     getTeams,
+    getWorkflows,
     setIsEndpointActive,
     setIsEndpointLoading,
     setAgents,
     setTeams,
+    setWorkflows,
     setAgentId,
     setSelectedModel,
     agentId,
-    teamId
+    teamId,
+    workflowId
   ])
 
   return {
@@ -140,6 +162,7 @@ const useChatActions = () => {
     addMessage,
     getAgents,
     getTeams,
+    getWorkflows,
     focusChatInput,
     initializePlayground
   }

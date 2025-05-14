@@ -243,3 +243,30 @@ export interface Team {
   // Add other fields from the example as needed
   storage?: { name: string } | null
 }
+
+// Define Workflow types based on the backend API
+export interface Workflow {
+  workflow_id: string
+  name: string
+  description?: string
+  parameters?: Record<string, unknown>
+  storage?: string | null
+}
+
+export interface ComboboxWorkflow {
+  value: string // workflow_id
+  label: string // name
+  description?: string
+  parameters?: Record<string, unknown>
+  storage?: boolean
+}
+
+export interface WorkflowRunRequest {
+  session_id?: string
+  user_id?: string
+  input: Record<string, unknown>
+}
+
+export interface WorkflowRenameRequest {
+  name: string
+}

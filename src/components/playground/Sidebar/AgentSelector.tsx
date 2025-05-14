@@ -24,6 +24,7 @@ export function AgentSelector() {
   })
   const [, setSessionId] = useQueryState('session')
   const [, setTeamId] = useQueryState('team')
+  const [, setWorkflowId] = useQueryState('workflow')
 
   // Set the model when the component mounts if an agent is already selected
   useEffect(() => {
@@ -44,15 +45,27 @@ export function AgentSelector() {
 
   const handleOnValueChange = (value: string) => {
     const newAgent = value === agentId ? null : value
-    const selectedAgent = agents.find((agent) => agent.value === newAgent)
-    setSelectedModel(selectedAgent?.model.provider || '')
-    setHasStorage(!!selectedAgent?.storage)
-    setAgentId(newAgent)
-    setTeamId(null)
-    setMessages([])
-    setSessionId(null)
-    if (selectedAgent?.model.provider) {
-      focusChatInput()
+    
+    if (newAgent) {
+      // If selecting an agent, clear team and workflow
+      const selectedAgent = agents.find((agent) => agent.value === newAgent)
+      setSelectedModel(selectedAgent?.model.provider || '')
+      setHasStorage(!!selectedAgent?.storage)
+      setAgentId(newAgent)
+      setTeamId(null)
+      setWorkflowId(null) // Clear workflow selection
+      setMessages([])
+      setSessionId(null)
+      
+      if (selectedAgent?.model.provider) {
+        focusChatInput()
+      }
+    } else {
+      // Just clearing the agent
+      setAgentId(null)
+      setSelectedModel('')
+      setMessages([])
+      setSessionId(null)
     }
   }
 

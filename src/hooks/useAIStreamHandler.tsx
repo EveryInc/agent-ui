@@ -1,15 +1,16 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { APIRoutes } from '@/api/routes'
 
 import useChatActions from '@/hooks/useChatActions'
 import { usePlaygroundStore } from '../store'
-import { RunEvent, type RunResponse } from '@/types/playground'
+import { RunEvent, type RunResponse, Workflow, WorkflowRunRequest, SessionEntry, PlaygroundChatMessage } from '@/types/playground'
 import { constructEndpointUrl } from '@/lib/constructEndpointUrl'
 import useAIResponseStream from './useAIResponseStream'
 import { ToolCall } from '@/types/playground'
 import { useQueryState } from 'nuqs'
 import { getJsonMarkdown } from '@/lib/utils'
+import { getPlaygroundWorkflowAPI, getWorkflowSessionStateAPI } from '@/api/playground'
 
 /**
  * useAIChatStreamHandler is responsible for making API calls and handling the stream response.
@@ -20,6 +21,7 @@ const useAIChatStreamHandler = () => {
   const { addMessage, focusChatInput } = useChatActions()
   const [agentId] = useQueryState('agent')
   const [teamId] = useQueryState('team')
+  const [workflowId] = useQueryState('workflow')
   const [sessionId, setSessionId] = useQueryState('session')
   const selectedEndpoint = usePlaygroundStore((state) => state.selectedEndpoint)
   const setStreamingErrorMessage = usePlaygroundStore(
@@ -29,6 +31,29 @@ const useAIChatStreamHandler = () => {
   const setSessionsData = usePlaygroundStore((state) => state.setSessionsData)
   const hasStorage = usePlaygroundStore((state) => state.hasStorage)
   const { streamResponse } = useAIResponseStream()
+  
+  // State to store the current workflow details
+  const [currentWorkflow, setCurrentWorkflow] = useState<Workflow | null>(null)
+
+  
+  // Fetch workflow details when workflowId changes
+  useEffect(() => {
+    const fetchWorkflowDetails = async () => {
+      if (workflowId && selectedEndpoint) {
+        try {
+          const workflow = await getPlaygroundWorkflowAPI(selectedEndpoint, workflowId)
+          setCurrentWorkflow(workflow)
+        } catch (error) {
+          console.error('Error fetching workflow details:', error)
+          setCurrentWorkflow(null)
+        }
+      } else {
+        setCurrentWorkflow(null)
+      }
+    }
+    
+    fetchWorkflowDetails()
+  }, [workflowId, selectedEndpoint])
 
   const updateMessagesWithErrorState = useCallback(() => {
     setMessages((prevMessages) => {
@@ -86,7 +111,9 @@ const useAIChatStreamHandler = () => {
 
         let currentAgentId = agentId
         const currentTeamId = teamId
+        const currentWorkflowId = workflowId
 
+        // Handle priority: team > agent > workflow
         if (currentAgentId && currentTeamId) {
           console.warn(
             'Both agentId and teamId are set. Prioritizing teamId and clearing agentId.'
@@ -94,8 +121,14 @@ const useAIChatStreamHandler = () => {
           currentAgentId = null
         }
 
-        if (!currentAgentId && !currentTeamId) {
-          console.error('No agent or team selected')
+        if ((currentAgentId || currentTeamId) && currentWorkflowId) {
+          console.warn(
+            'Both workflow and agent/team are set. Prioritizing agent/team and ignoring workflow.'
+          )
+        }
+
+        if (!currentAgentId && !currentTeamId && !currentWorkflowId) {
+          console.error('No agent, team, or workflow selected')
           setIsStreaming(false)
           return
         }
@@ -112,25 +145,104 @@ const useAIChatStreamHandler = () => {
             '{agent_id}',
             currentAgentId
           )
+        } else if (currentWorkflowId) {
+          playgroundRunUrl = APIRoutes.WorkflowRun(endpointUrl, currentWorkflowId)
         } else {
           console.error(
-            'Inconsistent state: No agent or team ID found despite initial check.'
+            'Inconsistent state: No agent, team, or workflow ID found despite initial check.'
           )
           setIsStreaming(false)
           return
         }
 
-        formData.append('stream', 'true')
-        formData.append('session_id', sessionId ?? '')
+        // Handle different request formats for different endpoints
+        let requestBody: any = {}
+        let headers: Record<string, string> = {}
+        
+        if (currentWorkflowId && currentWorkflow) {
+          // For workflows, we need to use the exact format shown in the example
+          const userMessage = formData.get('message') as string
+          
+          // Generate a unique session ID for workflows if we don't have one yet
+          if (!sessionId) {
+            // Generate a unique session ID
+            const generateUniqueSessionId = (): string => {
+              // Generate a random UUID
+              const uuid = crypto.randomUUID();
+              
+              // Check if this UUID already exists in the sessions list
+              const sessionsData = usePlaygroundStore.getState().sessionsData;
+              if (sessionsData && sessionsData.some((session: SessionEntry) => session.session_id === uuid)) {
+                // If it exists, generate another one
+                return generateUniqueSessionId();
+              }
+              return uuid;
+            };
+            
+            // Generate a unique session ID
+            newSessionId = generateUniqueSessionId();
+            
+            // Store the session data
+            if (hasStorage) {
+              const sessionData = {
+                session_id: newSessionId,
+                title: formData.get('message') as string,
+                created_at: Math.floor(Date.now() / 1000)
+              };
+              
+              // Add the session to the sessions list
+              setSessionsData((prevSessionsData: SessionEntry[] | null) => {
+                return [sessionData, ...(prevSessionsData ?? [])];
+              });
+              
+              // Set the session ID in the URL
+              setSessionId(newSessionId);
+              
+              // Update all messages with this session ID
+              setMessages((prevMessages) => {
+                return prevMessages.map(msg => ({
+                  ...msg,
+                  session_id: newSessionId
+                }));
+              });
+            } else {
+              setSessionId(newSessionId);
+            }
+          }
+          
+          // Create the exact payload format for workflows
+          requestBody = {
+            input: {
+              user_message: userMessage
+            },
+            user_id: null,
+            session_id: newSessionId || sessionId || null // Use our generated ID, or existing ID, or null
+          }
+          
+          // Set the exact headers needed
+          headers = {
+            'Content-Type': 'application/json',
+            'Accept': '*/*'
+          }
+        } else {
+          // For agents and teams, use the FormData approach
+          formData.append('stream', 'true')
+          formData.append('session_id', sessionId ?? '')
+          requestBody = formData
+          headers = {} // Let the browser set the correct Content-Type for FormData
+        }
 
         await streamResponse({
           apiUrl: playgroundRunUrl,
-          requestBody: formData,
+          requestBody,
+          headers,
           onChunk: (chunk: RunResponse) => {
+            
             if (
               chunk.event === RunEvent.RunStarted ||
               chunk.event === RunEvent.ReasoningStarted
             ) {
+              // For workflows, the session_id might come in the RunResponse event
               newSessionId = chunk.session_id as string
               setSessionId(chunk.session_id as string)
               if (
@@ -143,9 +255,9 @@ const useAIChatStreamHandler = () => {
                   title: formData.get('message') as string,
                   created_at: chunk.created_at
                 }
-                setSessionsData((prevSessionsData) => {
+                setSessionsData((prevSessionsData: SessionEntry[] | null) => {
                   const sessionExists = prevSessionsData?.some(
-                    (session) => session.session_id === chunk.session_id
+                    (session: SessionEntry) => session.session_id === chunk.session_id
                   )
                   if (sessionExists) {
                     return prevSessionsData
@@ -154,7 +266,7 @@ const useAIChatStreamHandler = () => {
                 })
               }
             } else if (chunk.event === RunEvent.RunResponse) {
-              setMessages((prevMessages) => {
+              setMessages((prevMessages: PlaygroundChatMessage[]) => {
                 const newMessages = [...prevMessages]
                 const lastMessage = newMessages[newMessages.length - 1]
                 if (
@@ -285,7 +397,32 @@ const useAIChatStreamHandler = () => {
               )
             }
           },
-          onComplete: () => {}
+          onComplete: async () => {
+            // Make sure to end streaming state even if no RunCompleted event was received
+            // This is particularly important for workflows where the session_id might be null initially
+            setIsStreaming(false)
+            
+            // If this is a workflow and we have a session ID, fetch the session state
+            if (currentWorkflowId && newSessionId) {
+              try {
+                const sessionState = await getWorkflowSessionStateAPI(
+                  selectedEndpoint,
+                  currentWorkflowId,
+                  newSessionId
+                )
+                // Store the session state in the store
+                console.log('Workflow session state:', sessionState)
+                usePlaygroundStore.getState().setWorkflowSessionState(sessionState)
+              } catch (error) {
+                console.error('Error fetching workflow session state:', error)
+                // Clear the session state on error
+                usePlaygroundStore.getState().setWorkflowSessionState(null)
+              }
+            } else {
+              // Clear the session state when not in a workflow
+              usePlaygroundStore.getState().setWorkflowSessionState(null)
+            }
+          }
         })
       } catch (error) {
         updateMessagesWithErrorState()
@@ -319,7 +456,9 @@ const useAIChatStreamHandler = () => {
       setSessionsData,
       sessionId,
       setSessionId,
-      hasStorage
+      hasStorage,
+      workflowId,
+      currentWorkflow
     ]
   )
 
